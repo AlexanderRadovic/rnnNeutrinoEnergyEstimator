@@ -35,9 +35,9 @@ maxlen = 10  # cut texts after this number of words (among top max_features most
 batch_size = 32
 
 print('Loading data...')
-X = np.genfromtxt('inputList.txt',delimiter='*',dtype='string')
-Y = np.genfromtxt('truthList.txt')
-number_of_variabes = 11
+X = np.genfromtxt('numu/inputList.txt',delimiter='*',dtype='string')
+Y = np.genfromtxt('numu/truthList.txt')
+number_of_variables = 12
 number_of_prongs = 10
 
 X_mva=np.zeros((len(X),len(X[0]),number_of_variables))
@@ -83,11 +83,22 @@ print(Y_train[0], 'first entry, train')
 
 print('Build model...')
 model = Sequential()
-model.add(TimeDistributed(Dense(12), input_shape=X_train[0].shape))
-model.add(TimeDistributed(Dense(12)))
-model.add(TimeDistributed(Dense(6)))
-model.add(LSTM(128, dropout_W=0.1, dropout_U=0.1))  # try using a GRU instead, for fun
+#model.add(TimeDistributed(Dense(24, activation='relu'), input_shape=X_train[0].shape))    
+#model.add(TimeDistributed(Dense(24, activation='relu')))
+
+#model.add(TimeDistributed(Dense(24)))
+#model.add(TimeDistributed(Dense(6)))
+#model.add(LSTM(64))#, dropout_W=0.1, dropout_U=0.1)) 
+
+#model.add(LSTM(128, dropout_W=0.1, dropout_U=0.1), input_shape=X_train[0].shape) 
+model.add(LSTM(16, input_shape=X_train[0].shape))
+
+#model.add(Dense(64, activation='relu'))
+#model.add(Dense(64))
+#model.add(Dense(64))
+
 model.add(Dense(1))
+
 model.add(Activation('linear'))
 
 # try using different optimizers and different optimizer configs
@@ -96,7 +107,7 @@ model.compile(loss='mse',#loss='binary_crossentropy',
 
 print('Train...')
 start_time = time.time()
-epochs = 4
+epochs = 2
 #for iteration in range(1, epochs+1):
 #    print()
 #    print('-' * 50)
@@ -126,15 +137,15 @@ for i in range(10):
 
 print(average_time_per_epoch,'average time per epoch')
 
-plt.style.use('ggplot')
-fig, ax = plt.subplots(figsize=(6,6))
-ax.set_title('Loss')
-ax.set_ylabel('Validation Loss')
-ax.set_xlabel('Epochs')
-ax.plot(resultLog.epoch, resultLog.history['val_loss'],'r')
-ax.plot(resultLog.epoch, resultLog.history['loss'],'b')
-plt.tight_layout()
-plt.show()
+# plt.style.use('ggplot')
+# fig, ax = plt.subplots(figsize=(6,6))
+# ax.set_title('Loss')
+# ax.set_ylabel('Validation Loss')
+# ax.set_xlabel('Epochs')
+# ax.plot(resultLog.epoch, resultLog.history['val_loss'],'r')
+# ax.plot(resultLog.epoch, resultLog.history['loss'],'b')
+# plt.tight_layout()
+# plt.show()
 
 print(resultLog.history)
 model.save_weights('test.hdf5') 
