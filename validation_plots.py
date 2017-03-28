@@ -1,15 +1,6 @@
 # -*- coding: utf-8 -*-
-'''Trains a LSTM on the IMDB sentiment classification task.
-The dataset is actually too small for LSTM to be of any advantage
-compared to simpler, much faster methods such as TF-IDF + LogReg.
-Notes:
-
-- RNNs are tricky. Choice of batch size is important,
-choice of loss and optimizer is critical, etc.
-Some configurations won't converge.
-
-- LSTM loss decrease patterns during training can be quite different
-from what you see with CNNs/MLPs/etc.
+'''
+Make simple plots and fits to benchmark performance of LSTM based energy estimator against existing approaches.
 '''
 from __future__ import print_function
 import numpy as np
@@ -35,25 +26,19 @@ class colors:
     fail = '\033[91m'
     close = '\033[0m'
 
-
-max_features = 20000
-maxlen = 10  # cut texts after this number of words (among top max_features most common words)
-batch_size = 32
-
 print('Loading data...')
-X = np.genfromtxt('numu/inputList.txt',delimiter='*',dtype='string')
-Y = np.genfromtxt('numu/truthList.txt')
-N = np.genfromtxt('numu/numuList.txt')
-C = np.genfromtxt('numu/caleList.txt')
-H = np.genfromtxt('numu/remainderList.txt')
+X = np.genfromtxt('numu/inputList.txt',delimiter='*',dtype='string') #prong level information
+Y = np.genfromtxt('numu/truthList.txt') #labels
+N = np.genfromtxt('numu/numuList.txt') #numu energy estimator
+C = np.genfromtxt('numu/caleList.txt') #calorimetric energy
+H = np.genfromtxt('numu/remainderList.txt') #header information
 
-#H=np.concatenate((H, H))
 
 number_of_variables = 12
 number_of_prongs = 10
 
+#reformat prong level input to be broken down by prong and variable.
 X_mva=np.zeros((len(X),len(X[0]),number_of_variables))
-
 for i in range(0,len(X)):
     for j in range(0,number_of_prongs):
         X_mva[i][j]=(X[i][j].split(","))
@@ -86,13 +71,9 @@ N_test=N[int(N.shape[0]*0.8):];
 H_test = np.reshape(H_test, (len(H_test),1))
 
 print('X_test shape:', X_test.shape)
-
 print('Y_test shape:', Y_test.shape)
-
 print('H_test shape:', H_test.shape)
-
 print('C_test shape:', C_test.shape)
-
 print('N_test shape:', N_test.shape)
 
 print(X_test[0], 'first entry, X')
@@ -100,25 +81,26 @@ print(Y_test[0], 'first entry, Y')
 print(H_test[0], 'first entry, H')
 print(C_test[0], 'first entry, C')
 print(N_test[0], 'first entry, N')
-print(C_test[0]-Y_test[0], 'first entry, C')
 
 print('Build model...')
 
+#load and run pretrained LSTM estimator
 model = load_model('my_model.hdf5')
 preds = model.predict([X_test,H_test], verbose=0)
 
+#makes reco-true residuals
 C_perf=(C_test-Y_test)/(Y_test)
 N_perf=(N_test-Y_test)/(Y_test)
-#print(preds.shape)
 preds = np.reshape(preds, (len(X_test)))
-#print(preds.shape)
 X_perf=(preds-Y_test)/(Y_test)
 
 
+#fit a simple gaussian distribution
 (C_mu, C_sigma) = norm.fit(C_perf)
 (N_mu, N_sigma) = norm.fit(N_perf)
 (X_mu, X_sigma) = norm.fit(X_perf)
 
+#get the rms
 C_rms=sqrt(mean(square(C_perf)))
 N_rms=sqrt(mean(square(N_perf)))
 X_rms=sqrt(mean(square(X_perf)))
