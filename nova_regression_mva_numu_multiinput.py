@@ -14,6 +14,7 @@ from keras.preprocessing import sequence
 from keras.utils import np_utils
 from keras.models import load_model
 from keras.models import Sequential
+from keras import optimizers
 from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Embedding, RepeatVector, TimeDistributed
 from keras.layers import LSTM, SimpleRNN, GRU, Input
@@ -25,7 +26,7 @@ class colors:
     close = '\033[0m'
 
 
-batch_size = 32
+batch_size = 246
 
 print('Loading data...')
 X = np.genfromtxt('numu/inputList.txt',delimiter='*',dtype='string') #the prong level info
@@ -33,8 +34,8 @@ Y = np.genfromtxt('numu/truthList.txt') #the labels
 H = np.genfromtxt('numu/remainderList.txt') #the "header" with event level information
 
 #dimensions of the prong level information
-number_of_variables = 12
-number_of_prongs = 10
+number_of_variables = 16
+number_of_prongs = 5
 
 #reformat prong level input to be broken down by prong and variable.
 X_mva=np.zeros((len(X),len(X[0]),number_of_variables))
@@ -60,13 +61,25 @@ print(H[0], 'first entry, train')
 print(X[0], 'first entry, train')
 
 #split into train and test samples
-X_test=X_mva[int(X_mva.shape[0]*0.8):];
-Y_test=Y[int(Y.shape[0]*0.8):];
-H_test=H[int(H.shape[0]*0.8):];
+indices = np.arange(X_mva.shape[0])
+np.random.shuffle(indices)
 
-X_train=X_mva[:int(X_mva.shape[0]*0.8)];
-Y_train=Y[:int(Y.shape[0]*0.8)];
-H_train=H[:int(H.shape[0]*0.8)];
+X_test=X_mva[indices[int(X_mva.shape[0]*0.8):]];
+Y_test=Y[indices[int(Y.shape[0]*0.8):]];
+H_test=H[indices[int(H.shape[0]*0.8):]];
+
+X_train=X_mva[indices[:int(X_mva.shape[0]*0.8)]];
+Y_train=Y[indices[:int(Y.shape[0]*0.8)]];
+H_train=H[indices[:int(H.shape[0]*0.8)]];
+
+# X_test=X_mva[int(X_mva.shape[0]*0.8):];
+# Y_test=Y[int(Y.shape[0]*0.8):];
+# H_test=H[int(H.shape[0]*0.8):];
+
+# X_train=X_mva[:int(X_mva.shape[0]*0.8)];
+# Y_train=Y[:int(Y.shape[0]*0.8)];
+# H_train=H[:int(H.shape[0]*0.8)];
+
 
 #reshape the header so that it's 2d rather than 1d, which is what keras expects
 #Y_train = np.reshape(Y_train, len(Y_train))
@@ -97,26 +110,31 @@ print('Build model...')
 main_input = Input(shape=X_train[0].shape, dtype='float', name='main_input')
 aux_input = Input(shape=H_train[0].shape, dtype='float', name='aux_input')
 
-#push the prong level information through a LSTM
+#push the prong level information through a LSTM or some other form of RNN
+#main_branch=TimeDistributed(Dense(32))(main_input)
+#main_branch=TimeDistributed(Dense(16))(main_input)
 main_branch=LSTM(16)(main_input)
 
 #merge the prong and header level information
 x = keras.layers.merge([main_branch, aux_input], mode='concat')
-
+#x=Dense(32)(x)
+#x=Dense(32)(x)
+#x=Dense(32)(x)
 #use combined output to make our energy estimate
 main_output = Dense(1, activation='linear', name='main_output')(x)
 
 model = Model(input=[main_input, aux_input], output=main_output)
 
 #mse as a regression task, rmsprop is meant to be be a good pick of LSTMs
-model.compile(loss='mse',
-              optimizer='rmsprop')
+rmsprop = optimizers.RMSprop(lr=0.001)
+model.compile(loss='mean_absolute_percentage_error',
+              optimizer=rmsprop)
 
 print('Train...')
 
 #start the training, set number of epochs
 start_time = time.time()
-epochs = 3
+epochs = 4
 resultLog=model.fit([X_train,H_train], Y_train, batch_size=batch_size, nb_epoch=epochs,
           validation_data=([X_test,H_test], Y_test))
 

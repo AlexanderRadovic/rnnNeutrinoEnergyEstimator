@@ -4,6 +4,7 @@ Make simple plots and fits to benchmark performance of LSTM based energy estimat
 '''
 from __future__ import print_function
 import numpy as np
+import math
 from numpy import mean, sqrt, square
 import matplotlib.pyplot as plt
 from scipy.stats import norm
@@ -69,7 +70,6 @@ H_test=H[indices[int(H.shape[0]*0.8):]];
 C_test=C[indices[int(C.shape[0]*0.8):]];
 N_test=N[indices[int(N.shape[0]*0.8):]];
 
-
 H_test = np.reshape(H_test, (len(H_test),1))
 
 print('X_test shape:', X_test.shape)
@@ -111,27 +111,61 @@ print('C Sigma', C_sigma)
 print('N Sigma', N_sigma)
 print('X Sigma', X_sigma)
 
-print('C Mu', C_mu)
-print('N Mu', N_mu)
-print('X Mu', X_mu)
-
 print('C RMS', C_rms)
 print('N RMS', N_rms)
 print('X RMS', X_rms)
 
-bins = np.linspace(-1, 1, 100)
-plt.hist(C_perf, bins, alpha=0.5)
-plt.hist(N_perf, bins, alpha=0.5)
-plt.hist(X_perf, bins, alpha=0.5)
+X_hist=np.zeros((50,50))
+for i in range(0,len(Y_test)):
+    if((Y_test[i] < 5.0) and (X_perf[i] < 0.5) and (X_perf[i] > -0.5)):
+        x_bin=int(math.floor((Y_test[i]/5)*50))
+        y_bin=int(math.floor((X_perf[i]+0.5)*50))
+        X_hist[y_bin][x_bin]= X_hist[y_bin][x_bin]+1
+        
+X_hist = X_hist.astype('float') / X_hist.sum(axis=0)[np.newaxis,:]
 
-# X_g = mlab.normpdf( bins, X_mu, X_sigma)
-# X_gl = plt.plot(bins, X_g, 'r--', linewidth=2)
-# C_g = mlab.normpdf( bins, C_mu, C_sigma)
-# C_gl = plt.plot(bins, C_g, 'b--', linewidth=2)
-# N_g = mlab.normpdf( bins, N_mu, N_sigma)
-# N_gl = plt.plot(bins, N_g, 'g--', linewidth=2)
+N_hist=np.zeros((50,50))
+for i in range(0,len(Y_test)):
+    if((Y_test[i] < 5.0) and (N_perf[i] < 0.5) and (N_perf[i] > -0.5)):
+        x_bin=int(math.floor((Y_test[i]/5)*50))
+        y_bin=int(math.floor((N_perf[i]+0.5)*50))
+        N_hist[y_bin][x_bin]= N_hist[y_bin][x_bin]+1
+        
+N_hist = N_hist.astype('float') / N_hist.sum(axis=0)[np.newaxis,:]
+
+C_hist=np.zeros((50,50))
+for i in range(0,len(Y_test)):
+    if((Y_test[i] < 5.0) and (C_perf[i] < 0.5) and (C_perf[i] > -0.5)):
+        x_bin=int(math.floor((Y_test[i]/5)*50))
+        y_bin=int(math.floor((C_perf[i]+0.5)*50))
+        C_hist[y_bin][x_bin]= C_hist[y_bin][x_bin]+1
+        
+C_hist = C_hist.astype('float') / C_hist.sum(axis=0)[np.newaxis,:]
 
 
+fig, ax = plt.subplots(figsize=(6,5))
+ax.set_ylabel('Residual')
+ax.set_xlabel('True Energy')
+ax.set_title('RNN Energy, NuMu')
+plt.imshow(X_hist,cmap='gist_heat_r',interpolation='none',extent=[0,5,-50,50],aspect=0.05,vmin=0,vmax=1)
 plt.show()
+plt.savefig('rnnEnergy_numu.png',dpi = 1000)
+
+fig2, ax2 = plt.subplots(figsize=(6,5))
+ax2.set_ylabel('Residual')
+ax2.set_xlabel('True Energy')
+ax2.set_title('NuMu Energy, NuMu')
+plt.imshow(N_hist,cmap='gist_heat_r',interpolation='none',extent=[0,5,-50,50],aspect=0.05,vmin=0,vmax=1)
+plt.show()
+plt.savefig('numuEnergy_numu.png',dpi = 1000)
+
+fig3, ax3 = plt.subplots(figsize=(6,5))
+ax3.set_ylabel('Residual')
+ax3.set_xlabel('True Energy')
+ax3.set_title('CalE Energy, NuMu')
+plt.imshow(C_hist,cmap='gist_heat_r',interpolation='none',extent=[0,5,-50,50],aspect=0.05,vmin=0,vmax=1)
+plt.show()
+plt.savefig('caleEnergy_numu.png',dpi = 1000)
+
 
 
