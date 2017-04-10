@@ -34,7 +34,7 @@ C = np.genfromtxt('numu/caleList.txt') #calorimetric energy
 H = np.genfromtxt('numu/remainderList.txt') #header information
 
 
-number_of_variables = 16
+number_of_variables = 14
 number_of_prongs = 5
 
 #reformat prong level input to be broken down by prong and variable.

@@ -21,6 +21,7 @@ from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Embedding, RepeatVector, TimeDistributed
 from keras.layers import LSTM, SimpleRNN, GRU, Input
 from keras.datasets import imdb
+from newLossFunctions import flattened_response_for_estimator
 
 class colors:
     ok = '\033[92m'
@@ -35,7 +36,7 @@ C = np.genfromtxt('numu/caleList.txt') #calorimetric energy
 H = np.genfromtxt('numu/remainderList.txt') #header information
 
 
-number_of_variables = 16
+number_of_variables = 14
 number_of_prongs = 5
 
 #reformat prong level input to be broken down by prong and variable.
@@ -87,7 +88,7 @@ print(N_test[0], 'first entry, N')
 print('Build model...')
 
 #load and run pretrained LSTM estimator
-model = load_model('my_model.hdf5')
+model = load_model('my_model.hdf5')#, custom_objects={'flattened_response_for_estimator': flattened_response_for_estimator})
 preds = model.predict([X_test,H_test], verbose=0)
 
 #makes reco-true residuals

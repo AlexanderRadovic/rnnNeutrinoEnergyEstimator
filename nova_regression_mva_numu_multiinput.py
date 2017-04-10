@@ -4,6 +4,7 @@ An attempt to build a LSTM based network for neutrino energy information.
 Combining reconstructed object level informaton with event level information.
 '''
 from __future__ import print_function
+
 import numpy as np
 import matplotlib.pyplot as plt
 import time
@@ -19,12 +20,26 @@ from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Embedding, RepeatVector, TimeDistributed
 from keras.layers import LSTM, SimpleRNN, GRU, Input
 from keras.datasets import imdb
+from keras.callbacks import LearningRateScheduler
+
+
+import newLossFunctions
+
+def learning_rate_plan(epoch):
+    learningRate=0.001
+    if epoch<21:
+        learningRate=learningRate*1
+    elif epoch>=21 and epoch<40:
+         learningRate=learningRate*0.5
+    elif epoch>41:
+         learningRate=learningRate*0.25
+         
+    return learningRate
 
 class colors:
     ok = '\033[92m'
     fail = '\033[91m'
     close = '\033[0m'
-
 
 batch_size = 246
 
@@ -34,7 +49,7 @@ Y = np.genfromtxt('numu/truthList.txt') #the labels
 H = np.genfromtxt('numu/remainderList.txt') #the "header" with event level information
 
 #dimensions of the prong level information
-number_of_variables = 16
+number_of_variables = 14
 number_of_prongs = 5
 
 #reformat prong level input to be broken down by prong and variable.
@@ -117,9 +132,9 @@ main_branch=LSTM(16)(main_input)
 
 #merge the prong and header level information
 x = keras.layers.merge([main_branch, aux_input], mode='concat')
-#x=Dense(32)(x)
-#x=Dense(32)(x)
-#x=Dense(32)(x)
+#x=Dense(16)(x)
+#x=Dense(16)(x)
+#x=Dense(16)(x)
 #use combined output to make our energy estimate
 main_output = Dense(1, activation='linear', name='main_output')(x)
 
@@ -134,9 +149,10 @@ print('Train...')
 
 #start the training, set number of epochs
 start_time = time.time()
-epochs = 4
+epochs = 60
+lossPlan=keras.callbacks.LearningRateScheduler(learning_rate_plan)
 resultLog=model.fit([X_train,H_train], Y_train, batch_size=batch_size, nb_epoch=epochs,
-          validation_data=([X_test,H_test], Y_test))
+                    validation_data=([X_test,H_test], Y_test),callbacks=[lossPlan])
 
 average_time_per_epoch = (time.time() - start_time) / epochs    
 
