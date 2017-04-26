@@ -19,6 +19,7 @@ from keras import optimizers
 from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Embedding, RepeatVector, TimeDistributed
 from keras.layers import LSTM, SimpleRNN, GRU, Input
+from keras.regularizers import l1, l2
 from keras.datasets import imdb
 from keras.callbacks import LearningRateScheduler
 
@@ -29,10 +30,19 @@ def learning_rate_plan(epoch):
     learningRate=0.001
     if epoch<21:
         learningRate=learningRate*1
-    elif epoch>=21 and epoch<40:
+    elif epoch>=21 and epoch<41:
          learningRate=learningRate*0.5
-    elif epoch>41:
+    elif epoch>=41:
          learningRate=learningRate*0.25
+
+    # if epoch<21:
+    #     learningRate=learningRate*1
+    # elif epoch>=21 and epoch<41:
+    #      learningRate=learningRate*0.5
+    # elif epoch>=41 and epoch<61:
+    #      learningRate=learningRate*0.25
+    # elif epoch>=61:
+    #      learningRate=learningRate*0.125
          
     return learningRate
 
@@ -41,12 +51,12 @@ class colors:
     fail = '\033[91m'
     close = '\033[0m'
 
-batch_size = 246
+batch_size = 128
 
 print('Loading data...')
-X = np.genfromtxt('numu/inputList.txt',delimiter='*',dtype='string') #the prong level info
-Y = np.genfromtxt('numu/truthList.txt') #the labels
-H = np.genfromtxt('numu/remainderList.txt') #the "header" with event level information
+X = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/inputList.txt',delimiter='*',dtype='string') #the prong level info
+Y = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/truthList.txt') #the labels
+H = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/remainderList.txt') #the "header" with event level information
 
 #dimensions of the prong level information
 number_of_variables = 14
@@ -128,7 +138,7 @@ aux_input = Input(shape=H_train[0].shape, dtype='float', name='aux_input')
 #push the prong level information through a LSTM or some other form of RNN
 #main_branch=TimeDistributed(Dense(32))(main_input)
 #main_branch=TimeDistributed(Dense(16))(main_input)
-main_branch=LSTM(16)(main_input)
+main_branch=LSTM(16)(main_input)#,W_regularizer = l1(0.001),U_regularizer = l1(0.001),b_regularizer = l1(0.001))(main_input)
 
 #merge the prong and header level information
 x = keras.layers.merge([main_branch, aux_input], mode='concat')
@@ -189,10 +199,18 @@ print(average_time_per_epoch,'average time per epoch')
 # plt.tight_layout()
 # plt.show()
 
+np_loss_history_val = np.array(resultLog.history['val_loss'])
+np_loss_history_train = np.array(resultLog.history['loss'])
+np_epoch = np.array(resultLog.epoch)
+
+np.save('trainloss_numu.npy',np_loss_history_train)
+np.save('valloss_numu.npy',np_loss_history_val)
+np.save('epoch_numu.npy',np_epoch)
+
 print(resultLog.history)
 
 #save the model definition + weights
-model.save('my_model.hdf5')
+model.save('my_model_numu.hdf5')
 #save just the weightsx
-model.save_weights('test.hdf5') 
+model.save_weights('test_numu.hdf5') 
 
