@@ -27,11 +27,11 @@ class colors:
     close = '\033[0m'
 
 print('Loading data...')
-X = np.genfromtxt('numu/inputList.txt',delimiter='*',dtype='string') #prong level information
-Y = np.genfromtxt('numu/truthList.txt') #labels
-N = np.genfromtxt('numu/numuList.txt') #numu energy estimator
-C = np.genfromtxt('numu/caleList.txt') #calorimetric energy
-H = np.genfromtxt('numu/remainderList.txt') #header information
+X = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/inputList.txt',delimiter='*',dtype='string') #prong level information
+Y = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/truthList.txt') #labels
+N = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/numu3aList.txt') #numu energy estimator
+C = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/caleList.txt') #calorimetric energy
+H = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/remainderList.txt') #header information
 
 
 number_of_variables = 14
@@ -87,7 +87,7 @@ print(N_test[0], 'first entry, N')
 print('Build model...')
 
 #load and run pretrained LSTM estimator
-model = load_model('my_model.hdf5')
+model = load_model('my_model_numu.hdf5')
 preds = model.predict([X_test,H_test], verbose=0)
 
 #makes reco-true residuals
@@ -107,6 +107,10 @@ C_rms=sqrt(mean(square(C_perf)))
 N_rms=sqrt(mean(square(N_perf)))
 X_rms=sqrt(mean(square(X_perf)))
 
+C_m=(mean(C_perf))
+N_m=(mean(N_perf))
+X_m=(mean(X_perf))
+
 print('C Sigma', C_sigma)
 print('N Sigma', N_sigma)
 print('X Sigma', X_sigma)
@@ -115,23 +119,22 @@ print('C Mu', C_mu)
 print('N Mu', N_mu)
 print('X Mu', X_mu)
 
+print('C Mean', C_m)
+print('N Mean', N_m)
+print('X Mean', X_m)
+
 print('C RMS', C_rms)
 print('N RMS', N_rms)
 print('X RMS', X_rms)
 
 bins = np.linspace(-1, 1, 100)
-plt.hist(C_perf, bins, alpha=0.5)
-plt.hist(N_perf, bins, alpha=0.5)
-plt.hist(X_perf, bins, alpha=0.5)
 
-# X_g = mlab.normpdf( bins, X_mu, X_sigma)
-# X_gl = plt.plot(bins, X_g, 'r--', linewidth=2)
-# C_g = mlab.normpdf( bins, C_mu, C_sigma)
-# C_gl = plt.plot(bins, C_g, 'b--', linewidth=2)
-# N_g = mlab.normpdf( bins, N_mu, N_sigma)
-# N_gl = plt.plot(bins, N_g, 'g--', linewidth=2)
-
-
-plt.show()
-
-
+fig, ax = plt.subplots(figsize=(6,6))
+ax.set_title('')
+ax.set_ylabel('Events')
+ax.set_xlabel('(Reco E - True E)/True E')
+plt.hist(C_perf, bins, color='b', alpha=0.9, histtype='step',lw=2,label='CalE')
+plt.hist(N_perf, bins, color='g', alpha=0.9, histtype='step',lw=2,label='Biswa NuMu')
+plt.hist(X_perf, bins, color='r', alpha=0.9, histtype='step',lw=2,label='LSTM')
+ax.legend(loc='right',frameon=False)
+plt.savefig('numuComparison.png',dpi = 1000)

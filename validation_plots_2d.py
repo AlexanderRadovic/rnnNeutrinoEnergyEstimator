@@ -29,12 +29,11 @@ class colors:
     close = '\033[0m'
 
 print('Loading data...')
-X = np.genfromtxt('numu/inputList.txt',delimiter='*',dtype='string') #prong level information
-Y = np.genfromtxt('numu/truthList.txt') #labels
-N = np.genfromtxt('numu/numuList.txt') #numu energy estimator
-C = np.genfromtxt('numu/caleList.txt') #calorimetric energy
-H = np.genfromtxt('numu/remainderList.txt') #header information
-
+X = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/inputList.txt',delimiter='*',dtype='string') #prong level information
+Y = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/truthList.txt') #labels
+N = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/numu3aList.txt') #numu energy estimator
+C = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/caleList.txt') #calorimetric energy
+H = np.genfromtxt('/media/alexander/SAMSUNG/kerasFiles/numu_new/all/remainderList.txt') #header information
 
 number_of_variables = 14
 number_of_prongs = 5
@@ -116,57 +115,131 @@ print('C RMS', C_rms)
 print('N RMS', N_rms)
 print('X RMS', X_rms)
 
+X_hist_rvt=np.zeros((50,50))
+for i in range(0,len(Y_test)):
+    if((Y_test[i] < 5.0) and (preds[i]<5.0)):
+        x_bin=int(math.floor((Y_test[i]/5)*50))
+        y_bin=49-int(math.floor((preds[i]/5)*50))
+        X_hist_rvt[y_bin][x_bin]= X_hist_rvt[y_bin][x_bin]+1
+
+
+N_hist_rvt=np.zeros((50,50))
+for i in range(0,len(Y_test)):
+    if((Y_test[i] < 5.0) and (N_test[i]<5.0)):
+        x_bin=int(math.floor((Y_test[i]/5)*50))
+        y_bin=49-int(math.floor((N_test[i]/5)*50))
+        N_hist_rvt[y_bin][x_bin]= N_hist_rvt[y_bin][x_bin]+1
+
+C_hist_rvt=np.zeros((50,50))
+for i in range(0,len(Y_test)):
+    if((Y_test[i] < 5.0) and (C_test[i]<5.0)):
+        x_bin=int(math.floor((Y_test[i]/5)*50))
+        y_bin=49-int(math.floor((C_test[i]/5)*50))
+        C_hist_rvt[y_bin][x_bin]= C_hist_rvt[y_bin][x_bin]+1
+
+###################
+        
 X_hist=np.zeros((50,50))
 for i in range(0,len(Y_test)):
     if((Y_test[i] < 5.0) and (X_perf[i] < 0.5) and (X_perf[i] > -0.5)):
         x_bin=int(math.floor((Y_test[i]/5)*50))
-        y_bin=int(math.floor((X_perf[i]+0.5)*50))
+        y_bin=49-int(math.floor((X_perf[i]+0.5)*50))
         X_hist[y_bin][x_bin]= X_hist[y_bin][x_bin]+1
         
-X_hist = X_hist.astype('float') / X_hist.sum(axis=0)[np.newaxis,:]
+#X_hist = X_hist.astype('float') / X_hist.sum(axis=0)[np.newaxis,:]
 
 N_hist=np.zeros((50,50))
 for i in range(0,len(Y_test)):
     if((Y_test[i] < 5.0) and (N_perf[i] < 0.5) and (N_perf[i] > -0.5)):
         x_bin=int(math.floor((Y_test[i]/5)*50))
-        y_bin=int(math.floor((N_perf[i]+0.5)*50))
+        y_bin=49-int(math.floor((N_perf[i]+0.5)*50))
         N_hist[y_bin][x_bin]= N_hist[y_bin][x_bin]+1
         
-N_hist = N_hist.astype('float') / N_hist.sum(axis=0)[np.newaxis,:]
+#N_hist = N_hist.astype('float') / N_hist.sum(axis=0)[np.newaxis,:]
 
 C_hist=np.zeros((50,50))
 for i in range(0,len(Y_test)):
     if((Y_test[i] < 5.0) and (C_perf[i] < 0.5) and (C_perf[i] > -0.5)):
         x_bin=int(math.floor((Y_test[i]/5)*50))
-        y_bin=int(math.floor((C_perf[i]+0.5)*50))
+        y_bin=49-int(math.floor((C_perf[i]+0.5)*50))
         C_hist[y_bin][x_bin]= C_hist[y_bin][x_bin]+1
         
-C_hist = C_hist.astype('float') / C_hist.sum(axis=0)[np.newaxis,:]
+#C_hist = C_hist.astype('float') / C_hist.sum(axis=0)[np.newaxis,:]
 
 
 fig, ax = plt.subplots(figsize=(6,5))
 ax.set_ylabel('Residual')
 ax.set_xlabel('True Energy')
-ax.set_title('RNN Energy, NuMu')
-plt.imshow(X_hist,cmap='gist_heat_r',interpolation='none',extent=[0,5,-50,50],aspect=0.05,vmin=0,vmax=1)
-plt.show()
+ax.set_title('LSTM Energy, Numu')
+plt.imshow(X_hist,cmap='gist_heat_r',interpolation='none',extent=[0,5,-50,50],aspect=0.05,vmin=0)#,vmax=1)
+#plt.show()
 plt.savefig('rnnEnergy_numu.png',dpi = 1000)
 
-fig2, ax2 = plt.subplots(figsize=(6,5))
-ax2.set_ylabel('Residual')
-ax2.set_xlabel('True Energy')
-ax2.set_title('NuMu Energy, NuMu')
-plt.imshow(N_hist,cmap='gist_heat_r',interpolation='none',extent=[0,5,-50,50],aspect=0.05,vmin=0,vmax=1)
-plt.show()
+#fig2, ax2 = plt.subplots(figsize=(6,5))
+ax.set_ylabel('Residual')
+ax.set_xlabel('True Energy')
+ax.set_title('Numu Energy, Numu')
+plt.imshow(N_hist,cmap='gist_heat_r',interpolation='none',extent=[0,5,-50,50],aspect=0.05,vmin=0)#,vmax=1)
+#plt.show()
 plt.savefig('numuEnergy_numu.png',dpi = 1000)
 
-fig3, ax3 = plt.subplots(figsize=(6,5))
-ax3.set_ylabel('Residual')
-ax3.set_xlabel('True Energy')
-ax3.set_title('CalE Energy, NuMu')
-plt.imshow(C_hist,cmap='gist_heat_r',interpolation='none',extent=[0,5,-50,50],aspect=0.05,vmin=0,vmax=1)
-plt.show()
+#fig3, ax3 = plt.subplots(figsize=(6,5))
+ax.set_ylabel('Residual')
+ax.set_xlabel('True Energy')
+ax.set_title('CalE Energy, Numu')
+plt.imshow(C_hist,cmap='gist_heat_r',interpolation='none',extent=[0,5,-50,50],aspect=0.05,vmin=0)#,vmax=1)
+#plt.show()
 plt.savefig('caleEnergy_numu.png',dpi = 1000)
 
 
+X_hist = X_hist.astype('float') / X_hist.sum(axis=0)[np.newaxis,:]
+N_hist = N_hist.astype('float') / N_hist.sum(axis=0)[np.newaxis,:]
+C_hist = C_hist.astype('float') / C_hist.sum(axis=0)[np.newaxis,:]
+
+#fig4, ax4 = plt.subplots(figsize=(6,5))
+ax.set_ylabel('Residual')
+ax.set_xlabel('True Energy')
+ax.set_title('LSTM Energy, Numu')
+plt.imshow(X_hist,cmap='gist_heat_r',interpolation='none',extent=[0,5,-50,50],aspect=0.05,vmin=0,vmax=1)
+#plt.show()
+plt.savefig('rnnEnergy_numu_norm.png',dpi = 1000)
+
+#fig5, ax5 = plt.subplots(figsize=(6,5))
+ax.set_ylabel('Residual')
+ax.set_xlabel('True Energy')
+ax.set_title('Numu Energy, Numu')
+plt.imshow(N_hist,cmap='gist_heat_r',interpolation='none',extent=[0,5,-50,50],aspect=0.05,vmin=0,vmax=1)
+#plt.show()
+plt.savefig('numuEnergy_numu_norm.png',dpi = 1000)
+
+#fig6, ax6 = plt.subplots(figsize=(6,5))
+ax.set_ylabel('Residual')
+ax.set_xlabel('True Energy')
+ax.set_title('CalE Energy, Numu')
+plt.imshow(C_hist,cmap='gist_heat_r',interpolation='none',extent=[0,5,-50,50],aspect=0.05,vmin=0,vmax=1)
+#plt.show()
+plt.savefig('caleEnergy_numu_norm.png',dpi = 1000)
+
+ax.set_ylabel('Reco Energy')
+ax.set_xlabel('True Energy')
+ax.set_title('LSTM Energy, Numu')
+plt.imshow(X_hist_rvt,cmap='gist_heat_r',interpolation='none',extent=[0,5,0,5])
+#plt.show()
+plt.savefig('rnnEnergy_numu_rvt.png',dpi = 1000)
+
+#fig5, ax5 = plt.subplots(figsize=(6,5))
+ax.set_ylabel('Reco Energy')
+ax.set_xlabel('True Energy')
+ax.set_title('Numu Energy, Numu')
+plt.imshow(N_hist_rvt,cmap='gist_heat_r',interpolation='none',extent=[0,5,0,5])
+#plt.show()
+plt.savefig('numuEnergy_numu_rvt.png',dpi = 1000)
+
+#fig6, ax6 = plt.subplots(figsize=(6,5))
+ax.set_ylabel('Reco Energy')
+ax.set_xlabel('True Energy')
+ax.set_title('CalE Energy, Numu')
+plt.imshow(C_hist_rvt,cmap='gist_heat_r',interpolation='none',extent=[0,5,0,5])
+#plt.show()
+plt.savefig('caleEnergy_numu_rvt.png',dpi = 1000)
 
