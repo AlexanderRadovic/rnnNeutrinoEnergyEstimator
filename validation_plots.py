@@ -116,7 +116,7 @@ print('C RMS', C_rms)
 print('N RMS', N_rms)
 print('X RMS', X_rms)
 
-plotResidual(C_perf, N_perf, X_perf, 'numu')
+plotFunctions.plotResidual(C_perf, N_perf, X_perf, 'numu')
 
 #make 2d array of predicted energy vs. true energy, cut on less interesting regions of energy
 X_hist_rvt=np.zeros((40,40))
@@ -165,19 +165,15 @@ for i in range(0,len(Y_test)):
         C_hist[y_bin][x_bin]= C_hist[y_bin][x_bin]+1
 
 
-plot2DEnergyResponse(X_hist, 'LSTM', 'Residual', 'rnnEnergy_numu.pdf', False)
-plot2DEnergyResponse(N_hist, '3A', 'Residual', '3aEnergy_numu.pdf', False)
-plot2DEnergyResponse(C_hist, 'calE', 'Residual', 'caleEnergy_numu.pdf', False)
+plotFunctions.plot2DEnergyResponse(X_hist, 'LSTM', 'Residual', 'rnnEnergy_numu.pdf', False, 1, 5, -50, 50)
+plotFunctions.plot2DEnergyResponse(N_hist, '3A', 'Residual', '3aEnergy_numu.pdf', False, 1, 5, -50, 50)
+plotFunctions.plot2DEnergyResponse(C_hist, 'calE', 'Residual', 'caleEnergy_numu.pdf', False, 1, 5, -50, 50)
 
-plot2DEnergyResponse(X_hist, 'LSTM', 'Residual', 'rnnEnergy_numu.pdf', True)
-plot2DEnergyResponse(N_hist, '3A', 'Residual', '3aEnergy_numu.pdf', True)
-plot2DEnergyResponse(C_hist, 'calE', 'Residual', 'caleEnergy_numu.pdf', True)
+plotFunctions.plot2DEnergyResponse(X_hist, 'LSTM', 'Residual', 'rnnEnergy_numu.pdf', True, 1, 5, -50, 50)
+plotFunctions.plot2DEnergyResponse(N_hist, '3A', 'Residual', '3aEnergy_numu.pdf', True, 1, 5, -50, 50)
+plotFunctions.plot2DEnergyResponse(C_hist, 'calE', 'Residual', 'caleEnergy_numu.pdf', True, 1, 5, -50, 50)
 
-plot2DEnergyResponse(X_hist, 'LSTM', 'Residual', 'rnnEnergy_numu_norm.pdf', True)
-plot2DEnergyResponse(N_hist, '3A', 'Residual', '3aEnergy_numu_norm.pdf', True)
-plot2DEnergyResponse(C_hist, 'calE', 'Residual', 'caleEnergy_numu_norm.pdf', True)
-
-plot2DEnergyResponse(X_hist_rvt, 'LSTM', 'Reconstructed Energy', 'rnnEnergy_numu_rvt_norm.pdf', True)
-plot2DEnergyResponse(N_hist_rvt, '3A', 'Reconstructed Energy', '3aEnergy_numu_rvt_norm.pdf', True)
-plot2DEnergyResponse(C_hist_rvt, 'calE', 'Reconstructed Energy', 'caleEnergy_numu_rvt_norm.pdf', True)
+plotFunctions.plot2DEnergyResponse(X_hist_rvt, 'LSTM', 'Reconstructed Energy', 'rnnEnergy_numu_rvt_norm.pdf', True,  1, 5, 1, 5) 
+plotFunctions.plot2DEnergyResponse(N_hist_rvt, '3A', 'Reconstructed Energy', '3aEnergy_numu_rvt_norm.pdf', True, 1, 5, 1, 5)
+plotFunctions.plot2DEnergyResponse(C_hist_rvt, 'calE', 'Reconstructed Energy', 'caleEnergy_numu_rvt_norm.pdf', True, 1, 5, 1, 5)
 
