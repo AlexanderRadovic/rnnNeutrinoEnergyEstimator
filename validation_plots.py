@@ -21,11 +21,8 @@ from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Embedding, RepeatVector, TimeDistributed
 from keras.layers import LSTM, SimpleRNN, GRU, Input
 from keras.datasets import imdb
+import plotFunctions
 
-class colors:
-    ok = '\033[92m'
-    fail = '\033[91m'
-    close = '\033[0m'
 
 print('Loading data...')
 
