@@ -54,7 +54,6 @@ X_mva=np.zeros((len(X),len(X[0]),number_of_variables))
 for i in range(0,len(X)):
     for j in range(0,number_of_prongs):
         X_mva[i][j]=(X[i][j].split(","))
-        #X_mva[i][j]=(X[i][number_of_prongs-(j+1)].split(","))
         
 print('X shape:', X.shape)
 print('X mva shape:', X_mva.shape)
@@ -85,6 +84,8 @@ N_test_presel=N[indices[int(N.shape[0]*0.8):]];
 H_test = np.reshape(H_test, (len(H_test),1))
 
 filterList=np.zeros(len(Y_test_presel))
+
+#Remove events too high to be of interest for oscillation physics
 for i in range(0,len(Y_test_presel)):
     filterList[i]=Y_test_presel[i]<5.
 
