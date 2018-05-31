@@ -26,14 +26,14 @@ import plotFunctions
 
 print('Loading data...')
 
-X = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/inputList.txt',delimiter='*',dtype='string') #prong level information
+X = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/inputList.txt',delimiter='*',dtype=str) #prong level information
 
-Y_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/truthList.txt',delimiter=',',dtype='string') #labels
+Y_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/truthList.txt',delimiter=',',dtype=str) #labels
 Y=np.zeros(len(X))
 for i in range(0,len(X)):
         Y[i]=float(Y_raw[i][0])
 
-N_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/numuList.txt',delimiter=',',dtype='string') #numu energy estimator
+N_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/numuList.txt',delimiter=',',dtype=str) #numu energy estimator
 N=np.zeros(len(X))
 for i in range(0,len(X)):
         N[i]=float(N_raw[i][0])
@@ -67,25 +67,11 @@ filterList=np.zeros(len(Y_test_presel))
 
 #Remove events too high to be of interest for oscillation physics
 for i in range(0,len(Y_test_presel)):
-    filterList[i]=Y_test_presel[i]<5.
+    filterList[i]=Y_test_presel[i]<10.
 
 Y_test=np.compress(filterList,Y_test_presel)
 C_test=np.compress(filterList,C_test_presel)
 N_test=np.compress(filterList,N_test_presel)
-
-print('Build model...')
-
-#load and run pretrained LSTM estimator
-model = load_model('my_model_numu.hdf5')
-preds = model.predict([X_test,H_test], verbose=0)
-
-#makes reco-true residuals
-C_perf=(C_test-Y_test)/(Y_test)
-N_perf=(N_test-Y_test)/(Y_test)
-preds_presel = np.reshape(preds[0][:], (len(X_test)))
-preds=np.compress(filterList,preds_presel)
-X_perf=(preds-Y_test)/(Y_test)
-
 
 plotFunctions.plotTrueSpectra(Y_test, 'numu')
 

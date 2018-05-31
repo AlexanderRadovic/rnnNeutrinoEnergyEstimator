@@ -12,27 +12,33 @@ def plotResidual(rnnEstimator, currEstimator, simpEstimator, sampleType):
     plt.hist(currEstimator, bins, color='g', alpha=0.9, histtype='step',lw=2,label='3A')
     plt.hist(rnnEstimator, bins, color='r', alpha=0.9, histtype='step',lw=2,label='LSTM')
     ax.legend(loc='right',frameon=False)
-    plt.savefig(sampleType+'Comparison.pdf',dpi = 1000)
+    plt.savefig(sampleType+'Comparison.png',dpi = 1000)
 
 
 def plotTrueSpectra(trueSpectra, sampleType):
-    bins = np.linspace(0, 20, 200)
+    bins = np.linspace(0, 5, 50)
     fig, ax = plt.subplots(figsize=(6,6))
     ax.set_title('')
     ax.set_ylabel('Events')
     ax.set_xlabel('True E')
     plt.hist(trueSpectra, bins, color='r', alpha=0.9, histtype='step',lw=2,label='TruE')
-    plt.savefig(sampleType+'TrueSpec.pdf',dpi = 1000)
+    plt.savefig(sampleType+'TrueSpec.png',dpi = 1000)
 
-    spectraHisto=np.zeroes(100)
+    spectraHisto=np.zeros(50)
 
     for i in trueSpectra:
-        spectraHisto[int(i*10)]++
+        spectraHisto[int(i*10)]=spectraHisto[int(i*10)]+1
 
-    spectraHisto=1./spectraHisto;
+    for i in range(0,50):
+        if spectraHisto[i] > 0:
+            spectraHisto[i]=1./spectraHisto[i];
+            print(spectraHisto[i])
 
-    np.save(spectraHisto,sampleType+'TrueSpecWeight.np')
+    np.save(sampleType+'TrueSpecWeight',spectraHisto)
 
+    plt.savefig(sampleType+'TrueSpec.png',dpi = 1000)
+
+    
 
 def plot2DEnergyResponse(inputArray, estimatorTitle, recoTitle, fileName, isNorm, ax0, ax1, ay0, ay1):
 
