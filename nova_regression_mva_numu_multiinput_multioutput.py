@@ -26,7 +26,7 @@ from keras.datasets import imdb
 from keras.callbacks import LearningRateScheduler
 
 
-import newLossFunctions
+import weightFunctions
 
 #define a learning rate strategy
 def learning_rate_plan(epoch):
@@ -131,6 +131,11 @@ print(H_train[0], 'first entry, train')
 
 print('Build model...')
 
+#Calculate weights for the sample
+W_train=flatweight(Y_train)
+W_test=flatweight(Y_test)
+
+
 #define a model with multiple inputs, one based on prongs the other using our event level header
 main_input = Input(shape=X_train[0].shape, dtype='float', name='main_input')
 aux_input = Input(shape=H_train[0].shape, dtype='float', name='aux_input')
@@ -161,8 +166,8 @@ print('Train...')
 start_time = time.time()
 epochs = 10
 lossPlan=keras.callbacks.LearningRateScheduler(learning_rate_plan)
-resultLog=model.fit([X_train,H_train], [Y_train,Y_lept_train,Y_had_train,Y_hadfrac_train], batch_size=batch_size, nb_epoch=epochs,
-                    validation_data=([X_test,H_test], [Y_test,Y_lept_test,Y_had_test,Y_hadfrac_test]),callbacks=[lossPlan])
+resultLog=model.fit([X_train,H_train], [Y_train,Y_lept_train,Y_had_train,Y_hadfrac_train], sample_weight=W_train, batch_size=batch_size, nb_epoch=epochs,
+                    validation_data=([X_test,H_test], [Y_test,Y_lept_test,Y_had_test,Y_hadfrac_test], W_test),callbacks=[lossPlan])
 
 average_time_per_epoch = (time.time() - start_time) / epochs    
 
