@@ -1,4 +1,5 @@
 #Place to store alternative loss functions
+#Currently not used, as I'm trying sample weights instead
 from __future__ import absolute_import
 import six
 from keras import backend as K
