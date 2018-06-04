@@ -48,8 +48,8 @@ class colors:
 batch_size = 128
 
 print('Loading data...')
-X = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/inputList.txt',delimiter='*',dtype='string') #the prong level info
-Y_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/truthList.txt',delimiter=',',dtype='string') #the labels
+X = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/inputList.txt',delimiter='*',dtype=str) #the prong level info
+Y_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/truthList.txt',delimiter=',',dtype=str) #the labels
 H = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/remainderList.txt') #the "header" with event level information
 
 #dimensions of the prong level information
