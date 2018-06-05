@@ -8,8 +8,8 @@ def weightfromspectra(energy):
     return 
 
 #Function to weight inverse to size of population in training sample
-def flatweight(y_true):
-    spectraweights=np.load('numuTrueSpecWeight.npy')
+def flatweight(y_true, sample):
+    spectraweights=np.load(sample+'TrueSpecWeight.npy')
     weights=np.zeros(len(y_true))
     for i in range(0, len(y_true)):
         energy=int(y_true[i]*10)

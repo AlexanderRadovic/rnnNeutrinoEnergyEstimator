@@ -32,7 +32,7 @@ def plotTrueSpectra(trueSpectra, sampleType):
     for i in range(0,50):
         if spectraHisto[i] > 0:
             spectraHisto[i]=1./spectraHisto[i];
-            print(spectraHisto[i])
+            #print(spectraHisto[i])
 
     np.save(sampleType+'TrueSpecWeight',spectraHisto)
 

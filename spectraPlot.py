@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 import matplotlib.mlab as mlab
 import time
+import argparse
 np.random.seed(1337)  # for reproducibility
 
 import keras
@@ -23,55 +24,31 @@ from keras.layers import LSTM, SimpleRNN, GRU, Input
 from keras.datasets import imdb
 import plotFunctions
 
+if __name__ == "__main__":
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--sample', type=str, required=True)
+        args = parser.parse_args()
 
-print('Loading data...')
+        print('Loading data...')
 
-X = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/inputList.txt',delimiter='*',dtype=str) #prong level information
+        Y_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/truthList.txt',delimiter=',',dtype=str) #labels
+        Y=np.zeros(len(Y_raw))
+        for i in range(0,len(Y_raw)):
+                Y[i]=float(Y_raw[i][0])
+                
+        indices = np.arange(Y.shape[0])
+        #same random seed as training, should allow us to march the validation set
+        np.random.shuffle(indices)
 
-Y_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/truthList.txt',delimiter=',',dtype=str) #labels
-Y=np.zeros(len(X))
-for i in range(0,len(X)):
-        Y[i]=float(Y_raw[i][0])
+        Y_test_presel=Y[indices[int(Y.shape[0]*0.8):]];
+   
+        filterList=np.zeros(len(Y_test_presel))
 
-N_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/numuList.txt',delimiter=',',dtype=str) #numu energy estimator
-N=np.zeros(len(X))
-for i in range(0,len(X)):
-        N[i]=float(N_raw[i][0])
+        #Remove events too high to be of interest for oscillation physics
+        for i in range(0,len(Y_test_presel)):
+                filterList[i]=Y_test_presel[i]<10.
 
-
-C = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/caleList.txt') #calorimetric energy
-H = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/remainderList.txt') #header information
-
-#dimensions of the prong level information
-number_of_variables = 29
-number_of_prongs = 5
-
-#reformat prong level input to be broken down by prong and variable.
-X_mva=np.zeros((len(X),len(X[0]),number_of_variables))
-for i in range(0,len(X)):
-    for j in range(0,number_of_prongs):
-        X_mva[i][j]=(X[i][j].split(","))
-        
-indices = np.arange(X_mva.shape[0])
-#same random seed as training, should allow us to march the validation set
-np.random.shuffle(indices)
-
-X_test=X_mva[indices[int(X_mva.shape[0]*0.8):]];
-Y_test_presel=Y[indices[int(Y.shape[0]*0.8):]];
-H_test=H[indices[int(H.shape[0]*0.8):]];
-C_test_presel=C[indices[int(C.shape[0]*0.8):]];
-N_test_presel=N[indices[int(N.shape[0]*0.8):]];
-H_test = np.reshape(H_test, (len(H_test),1))
-
-filterList=np.zeros(len(Y_test_presel))
-
-#Remove events too high to be of interest for oscillation physics
-for i in range(0,len(Y_test_presel)):
-    filterList[i]=Y_test_presel[i]<10.
-
-Y_test=np.compress(filterList,Y_test_presel)
-C_test=np.compress(filterList,C_test_presel)
-N_test=np.compress(filterList,N_test_presel)
-
-plotFunctions.plotTrueSpectra(Y_test, 'numu')
+        Y_test=np.compress(filterList,Y_test_presel)
+   
+        plotFunctions.plotTrueSpectra(Y_test, args.sample)
 
