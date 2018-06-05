@@ -149,7 +149,7 @@ if __name__ == "__main__":
         logModel=keras.callbacks.ModelCheckpoint(args.sample+'BestNoWeight.hdf5',monitor='val_loss',verbose=1,save_best_only=True)
         resultLog=model.fit([X_train,H_train], [Y_train,Y_lept_train], batch_size=batch_size, epochs=nepochs,validation_data=([X_test,H_test], [Y_test,Y_lept_test]),callbacks=[lossPlan,logModel])
 
-    average_time_per_epoch = (time.time() - start_time) / epochs    
+    average_time_per_epoch = (time.time() - start_time) / nepochs    
 
     #take a look at final performance on some example events from the test set
     for i in range(10):
