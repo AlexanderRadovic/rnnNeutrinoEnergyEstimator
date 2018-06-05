@@ -37,7 +37,6 @@ def learning_rate_plan(epoch):
          learningRate=learningRate*0.5
     elif epoch>=41:
          learningRate=learningRate*0.25
-
     return learningRate
 
 class colors:
@@ -48,8 +47,8 @@ class colors:
 batch_size = 128
 
 print('Loading data...')
-X = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/inputList.txt',delimiter='*',dtype=str) #the prong level info
-Y_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/truthList.txt',delimiter=',',dtype=str) #the labels
+X = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/inputList.txt',delimiter='*',dtype='string') #the prong level info
+Y_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/truthList.txt',delimiter=',',dtype='string') #the labels
 H = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/numu/remainderList.txt') #the "header" with event level information
 
 #dimensions of the prong level information
@@ -67,14 +66,10 @@ print('Y_raw shape:', Y_raw.shape)
 #extract target information
 Y=np.zeros(len(X))
 Y_lept=np.zeros(len(X))
-Y_had=np.zeros(len(X))
-Y_hadfrac=np.zeros(len(X))
 
 for i in range(0,len(X)):
-        Y[i]=float(Y_raw[i][0])
-        Y_lept[i]=float(Y_raw[i][1])
-        Y_had[i]=float(Y_raw[i][2])
-        Y_hadfrac[i]=float(Y_raw[i][3])
+         Y[i]=float(Y_raw[i][0])
+         Y_lept[i]=float(Y_raw[i][1])
 
 #check dimensions and sample inputs match expectations        
 print('X shape:', X.shape)
@@ -102,16 +97,12 @@ np.random.shuffle(indices)
 X_test=X_mva[indices[int(X_mva.shape[0]*0.8):]];
 Y_test=Y[indices[int(Y.shape[0]*0.8):]];
 Y_lept_test=Y_lept[indices[int(Y.shape[0]*0.8):]];
-Y_had_test=Y_had[indices[int(Y.shape[0]*0.8):]];
-Y_hadfrac_test=Y_hadfrac[indices[int(Y.shape[0]*0.8):]];
 
 H_test=H[indices[int(H.shape[0]*0.8):]];
 
 X_train=X_mva[indices[:int(X_mva.shape[0]*0.8)]];
 Y_train=Y[indices[:int(Y.shape[0]*0.8)]];
 Y_lept_train=Y_lept[indices[:int(Y.shape[0]*0.8)]];
-Y_had_train=Y_had[indices[:int(Y.shape[0]*0.8)]];
-Y_hadfrac_train=Y_hadfrac[indices[:int(Y.shape[0]*0.8)]];
 H_train=H[indices[:int(H.shape[0]*0.8)]];
 
 #reshape the header so that it's 2d rather than 1d, which is what keras expects
@@ -132,9 +123,8 @@ print(H_train[0], 'first entry, train')
 print('Build model...')
 
 #Calculate weights for the sample
-W_train=flatweight(Y_train)
-W_test=flatweight(Y_test)
-
+W_train=weightFunctions.flatweight(Y_train)
+W_test=weightFunctions.flatweight(Y_test)
 
 #define a model with multiple inputs, one based on prongs the other using our event level header
 main_input = Input(shape=X_train[0].shape, dtype='float', name='main_input')
@@ -150,10 +140,8 @@ x = keras.layers.merge([main_branch, aux_input], mode='concat')
 #use combined output to make our energy estimate
 main_output = Dense(1, activation='linear', name='main_output')(x)
 lepton_output = Dense(1, activation='linear', name='lepton_output')(x)
-hadron_output = Dense(1, activation='linear', name='hadron_output')(x)
-hadfrac_output = Dense(1, activation='linear', name='hadfrac_output')(x)
 
-model = Model(input=[main_input, aux_input], output=[main_output,lepton_output,hadron_output,hadfrac_output])
+model = Model(input=[main_input, aux_input], output=[main_output,lepton_output])
 
 #mse as a regression task, rmsprop is meant to be be a good pick for LSTMs
 rmsprop = optimizers.RMSprop(lr=0.001)
@@ -164,10 +152,12 @@ print('Train...')
 
 #start the training, set number of epochs
 start_time = time.time()
-epochs = 10
+epochs = 15
 lossPlan=keras.callbacks.LearningRateScheduler(learning_rate_plan)
-resultLog=model.fit([X_train,H_train], [Y_train,Y_lept_train,Y_had_train,Y_hadfrac_train], sample_weight=W_train, batch_size=batch_size, nb_epoch=epochs,
-                    validation_data=([X_test,H_test], [Y_test,Y_lept_test,Y_had_test,Y_hadfrac_test], W_test),callbacks=[lossPlan])
+#resultLog=model.fit([X_train,H_train], [Y_train,Y_lept_train,Y_had_train,Y_hadfrac_train], sample_weight=[W_train, W_train, W_train, W_train], batch_size=batch_size, nb_epoch=epochs,validation_data=([X_test,H_test], [Y_test,Y_lept_test,Y_had_test,Y_hadfrac_test], [W_test,W_test,W_test,W_test]),callbacks=[lossPlan])
+
+resultLog=model.fit([X_train,H_train], [Y_train,Y_lept_train], batch_size=batch_size, nb_epoch=epochs, validation_data=([X_test,H_test], [Y_test,Y_lept_test]),callbacks=[lossPlan])
+
 
 average_time_per_epoch = (time.time() - start_time) / epochs    
 
@@ -187,7 +177,7 @@ for i in range(10):
     print('H', h)
     print('T', correct)
     #print('G', guess)
-    print(colors.ok + '☑' + colors.close if (abs((correct-guess)/correct) < 0.05) else colors.fail + '☒' + colors.close, guess)
+    print(colors.ok + 'Y' + colors.close if (abs((correct-guess)/correct) < 0.05) else colors.fail + 'N' + colors.close, guess)
     print('---')
 
 
