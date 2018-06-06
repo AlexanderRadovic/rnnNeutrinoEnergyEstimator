@@ -27,10 +27,10 @@ from keras.datasets import imdb
 from keras.callbacks import LearningRateScheduler, ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 
 
-import weightFunctions
+import weight_functions
 
-#define a learning rate strategy
 def learning_rate_plan(epoch):
+    '''define a learning rate strategy'''
     learningRate = 0.001
     if epoch < 21:
         learningRate = learningRate*1
@@ -112,8 +112,8 @@ def main():
     print('Build model...')
 
     #Calculate weights for the sample
-    W_train = weightFunctions.flatweight(Y_train, args.sample)
-    W_test = weightFunctions.flatweight(Y_test, args.sample)
+    W_train = weight_functions.flatweight(Y_train, args.sample)
+    W_test = weight_functions.flatweight(Y_test, args.sample)
 
     #define a model with multiple inputs, one based on prongs the other using our event level header
     main_input = Input(shape=X_train[0].shape, dtype='float', name='main_input')
