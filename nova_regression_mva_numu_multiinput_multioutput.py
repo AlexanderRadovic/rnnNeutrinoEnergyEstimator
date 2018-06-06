@@ -31,16 +31,16 @@ import weight_functions
 
 def learning_rate_plan(epoch):
     '''define a learning rate strategy'''
-    learningRate = 0.001
+    learning_rate = 0.001
     if epoch < 21:
-        learningRate = learningRate*1
+        learning_rate = learning_rate*1
     elif epoch >= 21 and epoch < 41:
-        learningRate = learningRate*0.5
+        learning_rate = learning_rate*0.5
     elif epoch >= 41 and epoch < 61:
-        learningRate = learningRate*0.25
+        learning_rate = learning_rate*0.25
     elif epoch >= 61:
-        learningRate = learningRate*0.125
-    return learningRate
+        learning_rate = learning_rate*0.125
+    return learning_rate
 
 class colors:
     ok = '\033[92m'
@@ -57,67 +57,67 @@ def main():
 
     print('Loading data...')
     #the prong level info
-    X = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/inputList.txt',
+    x = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/inputList.txt',
                       delimiter='*', dtype='string')
     #the labels
-    Y_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/truthList.txt',
+    y_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/truthList.txt',
                           delimiter=',', dtype='string')
     #the "header" with event level information
-    H = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/remainderList.txt')
+    h = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/remainderList.txt')
 
     #dimensions of the prong level information
     number_of_variables = 29
     number_of_prongs = 5
 
     #reformat prong level input to be broken down by prong and variable.
-    X_mva = np.zeros((len(X), len(X[0]), number_of_variables))
-    for i in range(0, len(X)):
+    x_mva = np.zeros((len(x), len(x[0]), number_of_variables))
+    for i in range(0, len(x)):
         for j in range(0, number_of_prongs):
-            X_mva[i][j] = (X[i][j].split(","))
+            x_mva[i][j] = (x[i][j].split(","))
 
     #extract target information
-    Y = np.zeros(len(X))
-    Y_lept = np.zeros(len(X))
+    y = np.zeros(len(x))
+    y_lept = np.zeros(len(x))
 
-    for i in range(0, len(X)):
-        Y[i] = float(Y_raw[i][0])
-        Y_lept[i] = float(Y_raw[i][1])
+    for i in range(0, len(x)):
+        y[i] = float(y_raw[i][0])
+        y_lept[i] = float(y_raw[i][1])
 
     #check dimensions and sample inputs match expectations
-    print('X shape:', X.shape)
-    print('X mva shape:', X_mva.shape)
-    print('Y_raw shape:', Y_raw.shape)
-    print('Y shape:', Y.shape)
-    print('H shape:', H.shape)
+    print('x shape:', x.shape)
+    print('x mva shape:', x_mva.shape)
+    print('y_raw shape:', y_raw.shape)
+    print('y shape:', y.shape)
+    print('h shape:', h.shape)
 
     #split into train and test samples, use indices to keep various arrays in sync
-    indices = np.arange(X_mva.shape[0])
+    indices = np.arange(x_mva.shape[0])
     np.random.shuffle(indices)
 
-    X_test = X_mva[indices[int(X_mva.shape[0]*0.8):]]
-    Y_test = Y[indices[int(Y.shape[0]*0.8):]]
-    Y_lept_test = Y_lept[indices[int(Y.shape[0]*0.8):]]
+    x_test = x_mva[indices[int(x_mva.shape[0]*0.8):]]
+    y_test = y[indices[int(y.shape[0]*0.8):]]
+    y_lept_test = y_lept[indices[int(y.shape[0]*0.8):]]
 
-    H_test = H[indices[int(H.shape[0]*0.8):]]
+    h_test = h[indices[int(h.shape[0]*0.8):]]
 
-    X_train = X_mva[indices[:int(X_mva.shape[0]*0.8)]]
-    Y_train = Y[indices[:int(Y.shape[0]*0.8)]]
-    Y_lept_train = Y_lept[indices[:int(Y.shape[0]*0.8)]]
-    H_train = H[indices[:int(H.shape[0]*0.8)]]
+    x_train = x_mva[indices[:int(x_mva.shape[0]*0.8)]]
+    y_train = y[indices[:int(y.shape[0]*0.8)]]
+    y_lept_train = y_lept[indices[:int(y.shape[0]*0.8)]]
+    h_train = h[indices[:int(h.shape[0]*0.8)]]
 
     #reshape the header so that it's 2d rather than 1d, which is what keras expects
-    H_train = np.reshape(H_train, (len(H_train), 1))
-    H_test = np.reshape(H_test, (len(H_test), 1))
+    h_train = np.reshape(h_train, (len(h_train), 1))
+    h_test = np.reshape(h_test, (len(h_test), 1))
 
     print('Build model...')
 
     #Calculate weights for the sample
-    W_train = weight_functions.flatweight(Y_train, args.sample)
-    W_test = weight_functions.flatweight(Y_test, args.sample)
+    W_train = weight_functions.flatweight(y_train, args.sample)
+    W_test = weight_functions.flatweight(y_test, args.sample)
 
     #define a model with multiple inputs, one based on prongs the other using our event level header
-    main_input = Input(shape=X_train[0].shape, dtype='float', name='main_input')
-    aux_input = Input(shape=H_train[0].shape, dtype='float', name='aux_input')
+    main_input = Input(shape=x_train[0].shape, dtype='float', name='main_input')
+    aux_input = Input(shape=h_train[0].shape, dtype='float', name='aux_input')
 
     #push the prong level information through a LSTM or some other form of RNN
 
@@ -142,47 +142,47 @@ def main():
     #start the training, set number of epochs
     start_time = time.time()
     nepochs = 200
-    #lossPlan=keras.callbacks.LearningRateScheduler(learning_rate_plan)
-    lossPlan = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5,
-                                               patience=10, cooldown=0, verbose=1)
+    #loss_plan=keras.callbacks.LearningRateScheduler(learning_rate_plan)
+    loss_plan = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5,
+                                                  patience=10, cooldown=0, verbose=1)
 
     if args.weight:
         print('Reweight loss to flatten energy response vs. true energy.')
-        logModel = keras.callbacks.ModelCheckpoint(args.sample+'Best.hdf5',
-                                                   monitor='val_loss',
-                                                   verbose=1,
-                                                   save_best_only=True)
-        resultLog = model.fit([X_train,H_train], [Y_train, Y_lept_train],
-                              sample_weight=[W_train, W_train],
-                              batch_size=batch_size, epochs=nepochs,
-                              validation_data=
-                              ([X_test, H_test], [Y_test, Y_lept_test], [W_test, W_test]),
-                              callbacks=[lossPlan, logModel])
+        log_model = keras.callbacks.ModelCheckpoint(args.sample+'Best.hdf5',
+                                                    monitor='val_loss',
+                                                    verbose=1,
+                                                    save_best_only=True)
+        result_log = model.fit([x_train, h_train], [y_train, y_lept_train],
+                               sample_weight=[W_train, W_train],
+                               batch_size=batch_size, epochs=nepochs,
+                               validation_data=
+                               ([x_test, h_test], [y_test, y_lept_test], [W_test, W_test]),
+                               callbacks=[loss_plan, log_model])
     else:
-        logModel = keras.callbacks.ModelCheckpoint(args.sample+'BestNoWeight.hdf5',
-                                                   monitor='val_loss',
-                                                   verbose=1,
-                                                   save_best_only=True)
-        resultLog = model.fit([X_train, H_train], [Y_train, Y_lept_train],
-                            batch_size=batch_size,
-                            epochs=nepochs,
-                            validation_data=
-                            ([X_test, H_test],[Y_test, Y_lept_test]),
-                            callbacks=[lossPlan, logModel])
+        log_model = keras.callbacks.ModelCheckpoint(args.sample+'BestNoWeight.hdf5',
+                                                    monitor='val_loss',
+                                                    verbose=1,
+                                                    save_best_only=True)
+        result_log = model.fit([x_train, h_train], [y_train, y_lept_train],
+                               batch_size=batch_size,
+                               epochs=nepochs,
+                               validation_data=
+                               ([x_test, h_test], [y_test, y_lept_test]),
+                               callbacks=[loss_plan, log_model])
 
     average_time_per_epoch = (time.time() - start_time) / nepochs
 
     #take a look at final performance on some example events from the test set
     for i in range(10):
-        ind = np.random.randint(0, len(X_test))
-        rowX, rowH, rowy = X_test[np.array([ind])], H_test[np.array([ind])], Y_test[np.array([ind])]
-        preds = model.predict([rowX, rowH], verbose=0)
+        ind = np.random.randint(0, len(x_test))
+        row_x, row_h, row_y = x_test[np.array([ind])], h_test[np.array([ind])], y_test[np.array([ind])]
+        preds = model.predict([row_x, row_h], verbose=0)
         print('predict size:', preds[0].shape)
-        print('q size:', rowX.shape)
-        print('t size:', rowy.shape)
-        q = rowX[0]
-        h = rowH[0]
-        correct = rowy[0]
+        print('q size:', row_x.shape)
+        print('t size:', row_y.shape)
+        q = row_x[0]
+        h = row_h[0]
+        correct = row_y[0]
         guess = preds[0][0]
         print('Q', q)
         print('H', h)
@@ -201,20 +201,20 @@ def main():
     # ax.set_title('Loss')
     # ax.set_ylabel('Validation Loss')
     # ax.set_xlabel('Epochs')
-    # ax.plot(resultLog.epoch, resultLog.history['val_loss'],'r')
-    # ax.plot(resultLog.epoch, resultLog.history['loss'],'b')
+    # ax.plot(result_log.epoch, result_log.history['val_loss'],'r')
+    # ax.plot(result_log.epoch, result_log.history['loss'],'b')
     # plt.tight_layout()
     # plt.show()
 
-    np_loss_history_val = np.array(resultLog.history['val_loss'])
-    np_loss_history_train = np.array(resultLog.history['loss'])
-    np_epoch = np.array(resultLog.epoch)
+    np_loss_history_val = np.array(result_log.history['val_loss'])
+    np_loss_history_train = np.array(result_log.history['loss'])
+    np_epoch = np.array(result_log.epoch)
 
     np.save('trainloss_numu.npy', np_loss_history_train)
     np.save('valloss_numu.npy', np_loss_history_val)
     np.save('epoch_numu.npy', np_epoch)
 
-    print(resultLog.history)
+    print(result_log.history)
 
     #save the model definition + weights
     #model.save('my_model_numu.hdf5')
