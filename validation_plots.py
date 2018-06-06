@@ -33,170 +33,170 @@ def main():
     print('Loading data...')
 
     #prong level information
-    X = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/inputList.txt',
+    x = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/inputList.txt',
                       delimiter='*', dtype=str)
 
     #labels
-    Y_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/truthList.txt',
+    y_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/truthList.txt',
                           delimiter=',', dtype=str)
-    Y = np.zeros(len(X))
-    for i in range(0, len(X)):
-        Y[i] = float(Y_raw[i][0])
+    y = np.zeros(len(x))
+    for i in range(0, len(x)):
+        y[i] = float(y_raw[i][0])
 
-    N_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/'+args.sample+'List.txt',
+    n_raw = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/'+args.sample+'List.txt',
                           delimiter=',', dtype=str)
-    N = np.zeros(len(X))
-    for i in range(0, len(X)):
-        N[i] = float(N_raw[i][0])
+    n = np.zeros(len(x))
+    for i in range(0, len(x)):
+        n[i] = float(n_raw[i][0])
 
 
     #calorimetric energy
-    C = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/caleList.txt')
+    c = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/caleList.txt')
     #header information
-    H = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/remainderList.txt')
+    h = np.genfromtxt('/mnt/kerasFiles/miniprod4FD/'+args.sample+'/remainderList.txt')
 
     #dimensions of the prong level information
     number_of_variables = 29
     number_of_prongs = 5
 
     #reformat prong level input to be broken down by prong and variable.
-    X_mva = np.zeros((len(X), len(X[0]), number_of_variables))
-    for i in range(0, len(X)):
+    x_mva = np.zeros((len(x), len(x[0]), number_of_variables))
+    for i in range(0, len(x)):
         for j in range(0, number_of_prongs):
-            X_mva[i][j] = (X[i][j].split(","))
+            x_mva[i][j] = (x[i][j].split(","))
 
-    indices = np.arange(X_mva.shape[0])
+    indices = np.arange(x_mva.shape[0])
     #same random seed as training, should allow us to march the validation set
     np.random.shuffle(indices)
 
-    X_test = X_mva[indices[int(X_mva.shape[0]*0.8):]]
-    Y_test_presel = Y[indices[int(Y.shape[0]*0.8):]]
-    H_test = H[indices[int(H.shape[0]*0.8):]]
-    C_test_presel = C[indices[int(C.shape[0]*0.8):]]
-    N_test_presel = N[indices[int(N.shape[0]*0.8):]]
-    H_test = np.reshape(H_test, (len(H_test), 1))
+    x_test = x_mva[indices[int(x_mva.shape[0]*0.8):]]
+    y_test_presel = y[indices[int(y.shape[0]*0.8):]]
+    h_test = h[indices[int(h.shape[0]*0.8):]]
+    c_test_presel = c[indices[int(c.shape[0]*0.8):]]
+    n_test_presel = n[indices[int(n.shape[0]*0.8):]]
+    h_test = np.reshape(h_test, (len(h_test), 1))
 
-    filterList = np.zeros(len(Y_test_presel))
+    filterList = np.zeros(len(y_test_presel))
 
     #Remove events too high to be of interest for oscillation physics
-    for i in range(0, len(Y_test_presel)):
-        filterList[i] = Y_test_presel[i] < 5.
+    for i in range(0, len(y_test_presel)):
+        filterList[i] = y_test_presel[i] < 5.
 
-    Y_test = np.compress(filterList, Y_test_presel)
-    C_test = np.compress(filterList, C_test_presel)
-    N_test = np.compress(filterList, N_test_presel)
+    y_test = np.compress(filterList, y_test_presel)
+    c_test = np.compress(filterList, c_test_presel)
+    n_test = np.compress(filterList, n_test_presel)
 
     print('Build model...')
 
     #load and run pretrained LSTM estimator
     model = load_model(args.sample+'Best.hdf5')
-    preds = model.predict([X_test, H_test], verbose=0)
+    preds = model.predict([x_test, h_test], verbose=0)
 
     #makes reco-true residuals
-    C_perf = (C_test-Y_test)/(Y_test)
-    N_perf = (N_test-Y_test)/(Y_test)
-    preds_presel = np.reshape(preds[0][:], (len(X_test)))
+    c_perf = (c_test-y_test)/(y_test)
+    n_perf = (n_test-y_test)/(y_test)
+    preds_presel = np.reshape(preds[0][:], (len(x_test)))
     preds = np.compress(filterList, preds_presel)
-    X_perf = (preds-Y_test)/(Y_test)
+    x_perf = (preds-y_test)/(y_test)
 
     #fit a simple gaussian distribution
-    (C_mu, C_sigma) = norm.fit(C_perf)
-    (N_mu, N_sigma) = norm.fit(N_perf)
-    (X_mu, X_sigma) = norm.fit(X_perf)
+    (c_mu, c_sigma) = norm.fit(c_perf)
+    (n_mu, n_sigma) = norm.fit(n_perf)
+    (x_mu, x_sigma) = norm.fit(x_perf)
 
     #get the rms
-    C_rms = sqrt(mean(square(C_perf)))
-    N_rms = sqrt(mean(square(N_perf)))
-    X_rms = sqrt(mean(square(X_perf)))
+    c_rms = sqrt(mean(square(c_perf)))
+    n_rms = sqrt(mean(square(n_perf)))
+    x_rms = sqrt(mean(square(x_perf)))
 
-    C_m = (mean(C_perf))
-    N_m = (mean(N_perf))
-    X_m = (mean(X_perf))
+    c_m = (mean(c_perf))
+    n_m = (mean(n_perf))
+    x_m = (mean(x_perf))
 
     #print means and RMS for different estimators
-    print('C Sigma', C_sigma)
-    print('N Sigma', N_sigma)
-    print('X Sigma', X_sigma)
+    print('c Sigma', c_sigma)
+    print('n Sigma', n_sigma)
+    print('x Sigma', x_sigma)
 
-    print('C Mu', C_mu)
-    print('N Mu', N_mu)
-    print('X Mu', X_mu)
+    print('c Mu', c_mu)
+    print('n Mu', n_mu)
+    print('x Mu', x_mu)
 
-    print('C Mean', C_m)
-    print('N Mean', N_m)
-    print('X Mean', X_m)
+    print('c Mean', c_m)
+    print('n Mean', n_m)
+    print('x Mean', x_m)
 
-    print('C RMS', C_rms)
-    print('N RMS', N_rms)
-    print('X RMS', X_rms)
+    print('c RMS', c_rms)
+    print('n RMS', n_rms)
+    print('x RMS', x_rms)
 
-    plot_functions.plotResidual(X_perf, N_perf, C_perf, args.sample)
+    plot_functions.plot_residual(x_perf, n_perf, c_perf, args.sample)
 
     #make 2d array of predicted energy vs. true energy, cut on less interesting regions of energy
-    X_hist_rvt = np.zeros((50, 50))
-    for i in range(0, len(Y_test)):
-        if (Y_test[i] < 5.0) and (preds[i] < 5.0):
-            x_bin = int(math.floor((Y_test[i]/5)*50))
+    x_hist_rvt = np.zeros((50, 50))
+    for i in range(0, len(y_test)):
+        if (y_test[i] < 5.0) and (preds[i] < 5.0):
+            x_bin = int(math.floor((y_test[i]/5)*50))
             y_bin = 49-int(math.floor((preds[i]/5)*50))
-            X_hist_rvt[y_bin][x_bin] = X_hist_rvt[y_bin][x_bin]+1
+            x_hist_rvt[y_bin][x_bin] = x_hist_rvt[y_bin][x_bin]+1
 
 
-    N_hist_rvt = np.zeros((50, 50))
-    for i in range(0, len(Y_test)):
-        if (Y_test[i] < 5.0) and (N_test[i] < 5.0):
-            x_bin = int(math.floor((Y_test[i]/5)*50))
-            y_bin = 49-int(math.floor((N_test[i]/5)*50))
-            N_hist_rvt[y_bin][x_bin] = N_hist_rvt[y_bin][x_bin]+1
+    n_hist_rvt = np.zeros((50, 50))
+    for i in range(0, len(y_test)):
+        if (y_test[i] < 5.0) and (n_test[i] < 5.0):
+            x_bin = int(math.floor((y_test[i]/5)*50))
+            y_bin = 49-int(math.floor((n_test[i]/5)*50))
+            n_hist_rvt[y_bin][x_bin] = n_hist_rvt[y_bin][x_bin]+1
 
-    C_hist_rvt = np.zeros((50, 50))
-    for i in range(0, len(Y_test)):
-        if (Y_test[i] < 5.0) and (C_test[i] < 5.0):
-            x_bin = int(math.floor((Y_test[i]/5)*50))
-            y_bin = 49-int(math.floor((C_test[i]/5)*50))
-            C_hist_rvt[y_bin][x_bin] = C_hist_rvt[y_bin][x_bin]+1
+    c_hist_rvt = np.zeros((50, 50))
+    for i in range(0, len(y_test)):
+        if (y_test[i] < 5.0) and (c_test[i] < 5.0):
+            x_bin = int(math.floor((y_test[i]/5)*50))
+            y_bin = 49-int(math.floor((c_test[i]/5)*50))
+            c_hist_rvt[y_bin][x_bin] = c_hist_rvt[y_bin][x_bin]+1
 
     #make 2d array of (predicted energy-true)/true vs. true energy
-    X_hist = np.zeros((50, 50))
-    for i in range(0, len(Y_test)):
-        if (Y_test[i] < 5.0) and (X_perf[i] < 0.5) and (X_perf[i] > -0.5):
-            x_bin = int(math.floor((Y_test[i]/5)*50))
-            y_bin = 49-int(math.floor((X_perf[i]+0.5)*50))
-            X_hist[y_bin][x_bin] = X_hist[y_bin][x_bin]+1
+    x_hist = np.zeros((50, 50))
+    for i in range(0, len(y_test)):
+        if (y_test[i] < 5.0) and (x_perf[i] < 0.5) and (x_perf[i] > -0.5):
+            x_bin = int(math.floor((y_test[i]/5)*50))
+            y_bin = 49-int(math.floor((x_perf[i]+0.5)*50))
+            x_hist[y_bin][x_bin] = x_hist[y_bin][x_bin]+1
 
-    N_hist = np.zeros((50, 50))
-    for i in range(0, len(Y_test)):
-        if (Y_test[i] < 5.0) and (N_perf[i] < 0.5) and (N_perf[i] > -0.5):
-            x_bin = int(math.floor((Y_test[i]/5)*50))
-            y_bin = 49-int(math.floor((N_perf[i]+0.5)*50))
-            N_hist[y_bin][x_bin] = N_hist[y_bin][x_bin]+1
+    n_hist = np.zeros((50, 50))
+    for i in range(0, len(y_test)):
+        if (y_test[i] < 5.0) and (n_perf[i] < 0.5) and (n_perf[i] > -0.5):
+            x_bin = int(math.floor((y_test[i]/5)*50))
+            y_bin = 49-int(math.floor((n_perf[i]+0.5)*50))
+            n_hist[y_bin][x_bin] = n_hist[y_bin][x_bin]+1
 
-    C_hist = np.zeros((50, 50))
-    for i in range(0, len(Y_test)):
-        if (Y_test[i] < 5.0) and (C_perf[i] < 0.5) and (C_perf[i] > -0.5):
-            x_bin = int(math.floor((Y_test[i]/5)*50))
-            y_bin = 49-int(math.floor((C_perf[i]+0.5)*50))
-            C_hist[y_bin][x_bin] = C_hist[y_bin][x_bin]+1
+    c_hist = np.zeros((50, 50))
+    for i in range(0, len(y_test)):
+        if (y_test[i] < 5.0) and (c_perf[i] < 0.5) and (c_perf[i] > -0.5):
+            x_bin = int(math.floor((y_test[i]/5)*50))
+            y_bin = 49-int(math.floor((c_perf[i]+0.5)*50))
+            c_hist[y_bin][x_bin] = c_hist[y_bin][x_bin]+1
 
-    plot_functions.plot2DEnergyResponse(X_hist, 'LSTM', 'Residual',
-                                        'rnnEnergy_'+args.sample+'.png', False, 0, 5, -50, 50)
-    plot_functions.plot2DEnergyResponse(N_hist, '3A', 'Residual',
-                                        '3aEnergy_'+args.sample+'.png', False, 0, 5, -50, 50)
-    plot_functions.plot2DEnergyResponse(C_hist, 'calE', 'Residual',
-                                        'caleEnergy_'+args.sample+'.png', False, 0, 5, -50, 50)
+    plot_functions.plot2D_energy_response(x_hist, 'LSTM', 'Residual',
+                                          'rnnEnergy_'+args.sample+'.png', False, 0, 5, -50, 50)
+    plot_functions.plot2D_energy_response(n_hist, '3A', 'Residual',
+                                          '3aEnergy_'+args.sample+'.png', False, 0, 5, -50, 50)
+    plot_functions.plot2D_energy_response(c_hist, 'calE', 'Residual',
+                                          'caleEnergy_'+args.sample+'.png', False, 0, 5, -50, 50)
 
-    plot_functions.plot2DEnergyResponse(X_hist, 'LSTM', 'Residual',
-                                        'rnnEnergy_norm_'+args.sample+'.png', True, 0, 5, -50, 50)
-    plot_functions.plot2DEnergyResponse(N_hist, '3A', 'Residual',
-                                        '3aEnergy_norm_'+args.sample+'.png', True, 0, 5, -50, 50)
-    plot_functions.plot2DEnergyResponse(C_hist, 'calE', 'Residual',
-                                        'caleEnergy_norm_'+args.sample+'.png', True, 0, 5, -50, 50)
+    plot_functions.plot2D_energy_response(x_hist, 'LSTM', 'Residual',
+                                          'rnnEnergy_norm_'+args.sample+'.png', True, 0, 5, -50, 50)
+    plot_functions.plot2D_energy_response(n_hist, '3A', 'Residual',
+                                          '3aEnergy_norm_'+args.sample+'.png', True, 0, 5, -50, 50)
+    plot_functions.plot2D_energy_response(c_hist, 'calE', 'Residual',
+                                          'caleEnergy_norm_'+args.sample+'.png', True, 0, 5, -50, 50)
 
-    plot_functions.plot2DEnergyResponse(X_hist_rvt, 'LSTM', 'Reconstructed Energy',
-                                        'rnnEnergy_'+args.sample+'_rvt_norm.png', True, 0, 5, 0, 5)
-    plot_functions.plot2DEnergyResponse(N_hist_rvt, '3A', 'Reconstructed Energy',
-                                        '3aEnergy_'+args.sample+'_rvt_norm.png', True, 0, 5, 0, 5)
-    plot_functions.plot2DEnergyResponse(C_hist_rvt, 'calE', 'Reconstructed Energy',
-                                        'caleEnergy_'+args.sample+'_rvt_norm.png', True, 0, 5, 0, 5)
+    plot_functions.plot2D_energy_response(x_hist_rvt, 'LSTM', 'Reconstructed Energy',
+                                          'rnnEnergy_'+args.sample+'_rvt_norm.png', True, 0, 5, 0, 5)
+    plot_functions.plot2D_energy_response(n_hist_rvt, '3A', 'Reconstructed Energy',
+                                          '3aEnergy_'+args.sample+'_rvt_norm.png', True, 0, 5, 0, 5)
+    plot_functions.plot2D_energy_response(c_hist_rvt, 'calE', 'Reconstructed Energy',
+                                          'caleEnergy_'+args.sample+'_rvt_norm.png', True, 0, 5, 0, 5)
 
 if __name__ == "__main__":
     main()
